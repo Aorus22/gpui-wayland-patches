@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = ["gpui-pre", "gpui-pre-linux"]
+
+[patch.crates-io]
+gpui-pre = { path = "gpui-pre" }
+gpui-pre-linux = { path = "gpui-pre-linux" }
