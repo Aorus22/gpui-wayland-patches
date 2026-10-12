@@ -606,6 +606,15 @@ impl WaylandWindowState {
                 .set_max_size(max_texture_size, max_texture_size);
         }
 
+        // Layer-shell surfaces have no window decorations at all, so they must
+        // not report client-side ones: toolkits would otherwise inset the
+        // content for a shadow/border the compositor never draws.
+        let decorations = if matches!(surface_state, WaylandSurfaceState::LayerShell(_)) {
+            WindowDecorations::Server
+        } else {
+            WindowDecorations::Client
+        };
+
         Ok(Self {
             surface_state,
             parent,
@@ -622,7 +631,7 @@ impl WaylandWindowState {
             bounds: options.bounds,
             scale: 1.0,
             input_handler: None,
-            decorations: WindowDecorations::Client,
+            decorations,
             background_appearance: WindowBackgroundAppearance::Opaque,
             blur_regions: None,
             fullscreen: false,
@@ -1529,7 +1538,13 @@ impl WaylandWindowStatePtr {
 
         {
             let state = self.state.borrow();
-            if let Some(viewport) = &state.viewport {
+            // A layer surface asks the compositor to pick its size (0x0 until the first
+            // configure); wp_viewport rejects a zero destination with a fatal protocol error,
+            // and a scale event can arrive before that configure.
+            if let Some(viewport) = &state.viewport
+                && f32::from(size.width) as i32 > 0
+                && f32::from(size.height) as i32 > 0
+            {
                 viewport
                     .set_destination(f32::from(size.width) as i32, f32::from(size.height) as i32);
             }
@@ -2154,6 +2169,11 @@ impl PlatformWindow for WaylandWindow {
             Some(decoration) => {
                 decoration.set_mode(decorations.to_xdg());
                 state.decorations = decorations;
+                update_window(state);
+            }
+            None if matches!(state.surface_state, WaylandSurfaceState::LayerShell(_)) => {
+                // Never decorated, whatever the caller asks for.
+                state.decorations = WindowDecorations::Server;
                 update_window(state);
             }
             None => {
