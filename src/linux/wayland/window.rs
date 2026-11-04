@@ -2243,22 +2243,21 @@ fn update_window(mut state: RefMut<WaylandWindowState>) {
             state.background_effect = Some(manager.get_background_effect(&surface, &qh, ()));
         }
 
-        // `set_blur_region` takes **surface-local** coordinates, while
-        // `window_bounds` carries the window's position on screen — only its size
-        // is meaningful here. Reusing `region` (the opaque area) would offset the
-        // blur rectangle by the window's screen position and leave part of the
-        // window unblurred.
+        // `set_blur_region` takes surface-local coordinates. Keep the
+        // transparent CSD shadow margin outside the blur so the effect follows
+        // the visible panel rather than the full surface.
         let blur_region = state
             .globals
             .compositor
             .create_region(&state.globals.qh, ());
-        let surface_width = f32::from(state.window_bounds.size.width).max(0.0);
-        let surface_height = f32::from(state.window_bounds.size.height).max(0.0);
+        let inset = f32::from(state.inset()).max(0.0).ceil() as i32;
+        let surface_width = f32::from(state.window_bounds.size.width).ceil() as i32;
+        let surface_height = f32::from(state.window_bounds.size.height).ceil() as i32;
         blur_region.add(
-            0,
-            0,
-            surface_width.ceil() as i32,
-            surface_height.ceil() as i32,
+            inset,
+            inset,
+            (surface_width - 2 * inset).max(0),
+            (surface_height - 2 * inset).max(0),
         );
         state
             .background_effect
