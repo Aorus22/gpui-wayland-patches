@@ -1484,6 +1484,12 @@ impl WaylandWindowStatePtr {
             (state.bounds.size, state.scale)
         };
 
+        // The blur region is surface state sized from `bounds`. Reapply it
+        // after every configure/resize so the compositor does not keep the
+        // smaller region from the window's initial size (which leaves newly
+        // exposed parts of a maximized/resized window translucent but sharp).
+        update_window(self.state.borrow_mut());
+
         let callback = self.callbacks.borrow_mut().resize.take();
         if let Some(mut fun) = callback {
             fun(size, scale);

@@ -48,12 +48,11 @@ same version the `main` branch uses, and that release ships the
   advertised `Capability::Blur`, drive the standard protocol (dropping any KDE
   blur first, since the two would otherwise stack); otherwise keep the previous
   KDE path unchanged;
-- the blur rectangle is the **whole surface**, built from
-  `window_bounds.size` at origin `(0, 0)`. `set_blur_region` takes
-  surface-local coordinates, whereas `window_bounds` carries the window's
-  position on screen — reusing the opaque-area region there offsets the
-  rectangle by the window's screen position and leaves part of the window
-  unblurred.
+- the blur rectangle uses surface-local coordinates, with the visible panel
+  area inset from the transparent CSD shadow margin;
+- rebuild that rectangle whenever the drawable surface is resized or rescaled.
+  Otherwise the compositor retains the initial-size region after maximize or
+  resize, leaving newly exposed parts translucent but sharp.
 
 Deliberately **not** included: `Window::set_background_blur_regions()` and its
 `blur_regions` field. That API was added by the `main` branch's patch together
