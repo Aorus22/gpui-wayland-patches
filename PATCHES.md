@@ -48,14 +48,19 @@ same version the `main` branch uses, and that release ships the
   advertised `Capability::Blur`, drive the standard protocol (dropping any KDE
   blur first, since the two would otherwise stack); otherwise keep the previous
   KDE path unchanged;
-- blur covers the same region the window already computes for the surface -
-  i.e. the visible client area inside the shadow margin - so the transparent CSD
-  margin is not blurred.
+- the blur rectangle is the **whole surface**, built from
+  `window_bounds.size` at origin `(0, 0)`. `set_blur_region` takes
+  surface-local coordinates, whereas `window_bounds` carries the window's
+  position on screen — reusing the opaque-area region there offsets the
+  rectangle by the window's screen position and leaves part of the window
+  unblurred.
 
-Deliberately **not** included: `Window::set_background_blur_regions()`. That API
-was added by the `main` branch's patch together with a matching trait method in
-its own `gpui-pre`; the applications this branch serves blur the whole client
-area, and they run against the stock `gpui-pre` 0.3.3.
+Deliberately **not** included: `Window::set_background_blur_regions()` and its
+`blur_regions` field. That API was added by the `main` branch's patch together
+with a matching trait method in its own `gpui-pre`; the applications this branch
+serves blur the whole client area, and they run against the stock `gpui-pre`
+0.3.3. The `blur_regions == None` branch below is exactly what `main` falls back
+to.
 
 ## Use
 
