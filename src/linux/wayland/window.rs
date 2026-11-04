@@ -2251,8 +2251,8 @@ fn update_window(mut state: RefMut<WaylandWindowState>) {
             .compositor
             .create_region(&state.globals.qh, ());
         let inset = f32::from(state.inset()).max(0.0).ceil() as i32;
-        let surface_width = f32::from(state.window_bounds.size.width).ceil() as i32;
-        let surface_height = f32::from(state.window_bounds.size.height).ceil() as i32;
+        let surface_width = f32::from(state.bounds.size.width).ceil() as i32;
+        let surface_height = f32::from(state.bounds.size.height).ceil() as i32;
         blur_region.add(
             inset,
             inset,
